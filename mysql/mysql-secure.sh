@@ -17,12 +17,12 @@
 # Usage MySQL 5.7+:
 #  - Setup mysql root password:		systemctl start mysqld (ensures mysql has started once at least and temporary password has been created)  	
 #									tempPass="$(grep 'temporary password' /var/log/mysqld.log | awk '{printf $NF}')"
-#  									./mysql-secure-installation.sh $tempPass 'your_new_root_password'
-#  - Change mysql root password: 	./mysql-secure-installation.sh 'your_old_root_password' 'your_new_root_password'
+#  									sh mysql-secure.sh $tempPass 'your_new_root_password'
+#  - Change mysql root password: 	sh mysql-secure.sh 'your_old_root_password' 'your_new_root_password'
 #
 # Usage MySQL 5.6+:
-#  - Setup mysql root password:  	./mysql-secure-installation.sh 'your_new_root_password'
-#  - Change mysql root password: 	./mysql-secure-installation.sh 'your_old_root_password' 'your_new_root_password'
+#  - Setup mysql root password:  	sh mysql-secure.sh 'your_new_root_password'
+#  - Change mysql root password: 	sh mysql-secure.sh 'your_old_root_password' 'your_new_root_password'
 #
 
 # Delete package expect when script is done
@@ -50,9 +50,11 @@ elif [ -n "${1}" -a -n "${2}" ]; then
     CURRENT_MYSQL_PASSWORD="${1}"
     NEW_MYSQL_PASSWORD="${2}"
 else
-    echo "Usage:"
-    echo "  Setup mysql root password: ${0} 'your_new_root_password'"
-    echo "  Change mysql root password: ${0} 'your_old_root_password' 'your_new_root_password'"
+    echo "===== Usage =========================================================================="
+    echo "Setup root password  MySQL 5.6: ${0} 'your_new_root_password'"
+    echo "Change root password MySQL 5.6: ${0} 'your_old_root_password' 'your_new_root_password'"
+    echo "Setup root password  MySQL 5.7: ${0} 'your_tmp_root_password' 'your_new_root_password'"
+    echo "Change root password MySQL 5.7: ${0} 'your_old_root_password' 'your_new_root_password'"
     exit 1
 fi
 
@@ -78,29 +80,46 @@ fi
 set timeout 3
 spawn mysql_secure_installation
 
-expect "Enter current password for root (enter for none):"
+expect "Enter*password*root"
 send "$CURRENT_MYSQL_PASSWORD\r"
 
-expect "root password?"
-send "y\r"
+expect {
+	"Set root password" {
+		send "y\r"
+		exp_continue
+	} "Change*password" {
+		send "y\r"
+		exp_continue
+	} "New password" {
+		send "$NEW_MYSQL_PASSWORD\r"
+	}
+}
 
-expect "New password:"
+expect "Re-enter new password"
 send "$NEW_MYSQL_PASSWORD\r"
 
-expect "Re-enter new password:"
-send "$NEW_MYSQL_PASSWORD\r"
+expect {
+	"Remove anonymous users" {
+		send "y\r"
+	} "Do you wish to continue with the password provided" {
+		send "y\r"
+		exp_continue
+	} "Change the password for root" {
+		send "n\r"
+		exp_continue
+	}
+}
 
-expect "Remove anonymous users?"
+expect "Disallow root login remotely"
 send "y\r"
 
-expect "Disallow root login remotely?"
+expect "Remove test database and access to it"
 send "y\r"
 
-expect "Remove test database and access to it?"
+expect "Reload privilege tables now"
 send "y\r"
 
-expect "Reload privilege tables now?"
-send "y\r"
+expect eof
 
 EOF
 
