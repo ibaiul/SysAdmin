@@ -1,7 +1,9 @@
 #!/bin/bash
 
 #
-# Automate mysql secure installation for debian-baed systems
+# forked from https://gist.github.com/coderua/5592d95970038944d099
+#
+# Automate mysql secure installation for RedHat based systems
 # 
 #  - You can set a password for root accounts.
 #  - You can remove root accounts that are accessible from outside the local host.
@@ -10,8 +12,7 @@
 #    and privileges that permit anyone to access databases with names that start with test_. 
 #  For details see documentation: http://dev.mysql.com/doc/refman/5.7/en/mysql-secure-installation.html
 #
-# @version 13.08.2014 00:39 +03:00
-# Tested on Debian 7.6 (wheezy)
+# Tested on CentOS 7 - MySQL 5.7.15
 #
 # Usage:
 #  Setup mysql root password:  ./mysql_secure.sh 'your_new_root_password'
@@ -52,13 +53,21 @@ fi
 #
 # Check is expect package installed
 #
-if [ $(dpkg-query -W -f='${Status}' expect 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
-    echo "Can't find expect. Trying install it..."
-    aptitude -y install expect
-
+yum list installed expect
+if [ $? -ne 0 ]; then
+    echo "Can't find expect. Trying to install ..."
+    yum install -y expect
+    status=$?
+    if [ $status -ne 0 ]; then
+    	echo "Unable to install expect. Status: $status. Exiting ..."
+    	exit 1
+    fi
 fi
 
-SECURE_MYSQL=$(expect -c "
+#
+# Execution mysql_secure_installation
+#
+/usr/bin/expect << EOF
 
 set timeout 3
 spawn mysql_secure_installation
@@ -87,17 +96,11 @@ send \"y\r\"
 expect \"Reload privilege tables now?\"
 send \"y\r\"
 
-expect eof
-")
-
-#
-# Execution mysql_secure_installation
-#
-echo "${SECURE_MYSQL}"
+EOF
 
 if [ "${PURGE_EXPECT_WHEN_DONE}" -eq 1 ]; then
     # Uninstalling expect package
-    aptitude -y purge expect
+    yum remove -y expect
 fi
 
 exit 0
