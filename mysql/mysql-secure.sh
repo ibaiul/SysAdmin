@@ -3,7 +3,7 @@
 #
 # Forked from https://gist.github.com/coderua/5592d95970038944d099
 #
-# Automate mysql secure installation for RedHat based systems
+# Automated mysql secure installation for RedHat based systems
 # 
 #  - You can set a password for root accounts.
 #  - You can remove root accounts that are accessible from outside the local host.
@@ -12,10 +12,11 @@
 #    and privileges that permit anyone to access databases with names that start with test_. 
 #  For details see documentation: http://dev.mysql.com/doc/refman/5.7/en/mysql-secure-installation.html
 #
-# Tested on CentOS 7 - MySQL 5.7.15 (other versions may require little adapts)
+# Tested on CentOS 7 - MySQL 5.7.15 - MySQL 5.6.33 - (other versions may require little adapts) 
 #
 # Usage MySQL 5.7+:
-#  - Setup mysql root password:  	tempPass="$(grep 'temporary password' /var/log/mysqld.log | awk '{printf $NF}')"
+#  - Setup mysql root password:		systemctl start mysqld (ensures mysql has started once at least and temporary password has been created)  	
+#									tempPass="$(grep 'temporary password' /var/log/mysqld.log | awk '{printf $NF}')"
 #  									./mysql-secure-installation.sh $tempPass 'your_new_root_password'
 #  - Change mysql root password: 	./mysql-secure-installation.sh 'your_old_root_password' 'your_new_root_password'
 #
