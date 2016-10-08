@@ -12,11 +12,16 @@
 #    and privileges that permit anyone to access databases with names that start with test_. 
 #  For details see documentation: http://dev.mysql.com/doc/refman/5.7/en/mysql-secure-installation.html
 #
-# Tested on CentOS 7 - MySQL 5.7.15
+# Tested on CentOS 7 - MySQL 5.7.15 (other versions may require little adapts)
 #
-# Usage:
-#  Setup mysql root password:  ./mysql_secure.sh 'your_new_root_password'
-#  Change mysql root password: ./mysql_secure.sh 'your_old_root_password' 'your_new_root_password'"
+# Usage MySQL 5.7+:
+#  - Setup mysql root password:  	tempPass="$(grep 'temporary password' /var/log/mysqld.log | awk '{printf $NF}')"
+#  									./mysql-secure-installation.sh $tempPass 'your_new_root_password'
+#  - Change mysql root password: 	./mysql-secure-installation.sh 'your_old_root_password' 'your_new_root_password'
+#
+# Usage MySQL 5.6+:
+#  - Setup mysql root password:  	./mysql-secure-installation.sh 'your_new_root_password'
+#  - Change mysql root password: 	./mysql-secure-installation.sh 'your_old_root_password' 'your_new_root_password'
 #
 
 # Delete package expect when script is done
